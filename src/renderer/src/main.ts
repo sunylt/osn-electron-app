@@ -1,6 +1,5 @@
-import './assets/main.css'
-
 import { createApp } from 'vue'
 import App from './App.vue'
-
-createApp(App).mount('#app')
+import Worker from './Worker.vue'
+console.log(location.href)
+createApp(location.href.includes('worker') ? Worker : App).mount('#app')

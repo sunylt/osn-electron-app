@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import obs from 'obs-studio-node'
+import * as obs from 'obs-studio-node'
 
 // Custom APIs for renderer
 const api = {}

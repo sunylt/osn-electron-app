@@ -5,7 +5,30 @@ import remote from '@electron/remote/main'
 import icon from '../../resources/icon.png?asset'
 import { initialize, setupPreview } from './obs-app'
 
+console.log(remote)
+
+remote.initialize()
+
 function createWindow(): void {
+
+
+  const workerWindow = new BrowserWindow({
+    show: false,
+    frame: false,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    }
+  })
+
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    workerWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] + '#worker')
+  }
+
+  workerWindow.webContents.openDevTools()
+
+  remote.enable(workerWindow.webContents)
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
@@ -14,8 +37,9 @@ function createWindow(): void {
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
-      contextIsolation: false,
       nodeIntegration: true,
+      webviewTag: true,
+      contextIsolation: false,
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     }
@@ -23,18 +47,24 @@ function createWindow(): void {
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
+    workerWindow.webContents.send('winId', mainWindow.id)
   })
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
+  // mainWindow.webContents.setWindowOpenHandler((details) => {
+  //   shell.openExternal(details.url)
+  //   return { action: 'deny' }
+  // })
 
 
-  ipcMain.on('initPreview', (_, args) => {
-    initialize(mainWindow)
-    setupPreview(mainWindow, args)
+  ipcMain.handle('initPreview', (_, bounds) => {
+    // initialize(mainWindow)
+    // console.log('ready to create display')
+    // setupPreview(mainWindow, bounds)
   })
+
+  ipcMain.handle('addImage', (_, bounds) => {
+    // setupPreview(mainWindow, bounds)
+  });
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
@@ -46,7 +76,7 @@ function createWindow(): void {
 
   remote.enable(mainWindow.webContents)
 
-  mainWindow.webContents.openDevTools()
+  // mainWindow.webContents.openDevTools()
 
 }
 

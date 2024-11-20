@@ -31,7 +31,7 @@ export function initialize(win) {
   initOBS();
   configureOBS();
   scene = setupScene();
-  setupSources();
+  // setupSources();
   obsInitialized = true;
 
   const perfStatTimer = setInterval(() => {
@@ -239,6 +239,7 @@ export function setupScene() {
     };
   }
 
+
   return scene;
 }
 
@@ -290,13 +291,16 @@ export function setupPreview(window, bounds) {
     window.getNativeWindowHandle(),
     scene.name, // or use camera source Id here
     displayId,
+    0,
+    false,
+    context,
   );
-  osn.NodeObs.OBS_content_setShouldDrawUI(displayId, false);
-  osn.NodeObs.OBS_content_setPaddingSize(displayId, 0);
-  // Match padding color with main window background color
-  osn.NodeObs.OBS_content_setPaddingColor(displayId, 255, 255, 255);
+  // osn.NodeObs.OBS_content_setShouldDrawUI(displayId, false);
+  // osn.NodeObs.OBS_content_setPaddingSize(displayId, 0);
+  // // Match padding color with main window background color
+  // osn.NodeObs.OBS_content_setPaddingColor(displayId, 255, 255, 255);
 
-  return resizePreview(window, bounds);
+  // return resizePreview(window, bounds);
 }
 let existingWindow = false
 let initY = 0
@@ -329,6 +333,7 @@ export function resizePreview(window, bounds) {
     nwr.moveWindow(displayId, displayX * scaleFactor, (initY - displayY + initY) * scaleFactor)
     existingWindow = true
   } else {
+    console.log('windows move display')
     osn.NodeObs.OBS_content_moveDisplay(displayId, displayX * scaleFactor, displayY * scaleFactor);
   }
 

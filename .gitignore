@@ -5,3 +5,5 @@ out
 *.log*
 osn-data
 .vscode
+yarn.lock
+package-lock.json
