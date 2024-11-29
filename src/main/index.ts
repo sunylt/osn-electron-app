@@ -12,28 +12,28 @@ remote.initialize()
 function createWindow(): void {
 
 
-  const workerWindow = new BrowserWindow({
-    show: false,
-    frame: false,
-    webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-    }
-  })
+  // const workerWindow = new BrowserWindow({
+  //   show: false,
+  //   frame: false,
+  //   webPreferences: {
+  //     nodeIntegration: true,
+  //     contextIsolation: false,
+  //   }
+  // })
 
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    workerWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] + '#worker')
-  }
+  // if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+  //   workerWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] + '#worker')
+  // }
 
-  workerWindow.webContents.openDevTools()
+  // workerWindow.webContents.openDevTools()
 
-  remote.enable(workerWindow.webContents)
+  // remote.enable(workerWindow.webContents)
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
-    show: false,
+    show: true,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
@@ -46,8 +46,8 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-    workerWindow.webContents.send('winId', mainWindow.id)
+    // mainWindow.show()
+    // workerWindow.webContents.send('MainWindowId', mainWindow.id)
   })
 
   // mainWindow.webContents.setWindowOpenHandler((details) => {
@@ -76,7 +76,7 @@ function createWindow(): void {
 
   remote.enable(mainWindow.webContents)
 
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
 
 }
 

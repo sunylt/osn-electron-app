@@ -147,9 +147,107 @@ sceneItem.position = { x: 300, y: 300 }
 -  osn.NodeObs.OBS_content_resizeDisplay(displayId, 1000, 800);
 -  osn.NodeObs.OBS_content_moveDisplay(displayId, 100, 300);
 
-#### 应用配置
+#### OBS应用配置
+- obs.NodeObs.OBS_settings_getSettings(category: string)
 
-#### 通过RTMP推流
+你可以通过此方法获取相应类别下的配置信息，例如
+
+```typescript
+const videoSettings = obs.NodeObs.OBS_settings_getSettings('Video')
+console.log(videoSettings)
+// videoSettings 结构如下：
+{
+  data: [
+    {
+      nameSubCategory: 'Untitled',
+      parameters: [
+        {
+          name: 'Base',
+          type: 'OBS_INPUT_RESOLUTION_LIST',
+          description: 'Base (Canvas) Resolution',
+          currentValue: '1280x720',
+          subType: 'OBS_COMBO_FORMAT_STRING',
+          values: [
+            { '1920x1080': '1920x1080' },
+            { '1280x720'： '1280x720'},
+            { '3840x2160': '3840x2160' }
+          ]
+        }，
+        { 
+          name: 'Output',
+          ...
+        },
+        { 
+          name: 'Output',
+          ...
+        },
+        {
+          name: 'ScaleType',
+          ...
+        },
+        {
+          name: 'FPS Type',
+          ...
+        },
+        {
+          name: 'FPSCommon',
+          ...
+        }
+      ]
+    }
+  ],
+  type: 0
+}
+```
+
+- obs.NodeObs.OBS_settings_setSettings(category: string, settings: Object)
+
+你可以通过此方法修改obs应用的某个类别的设置，例如把输出分辨率修改成1024*768，那么就是要修改Video类别下的子类别Output的currentValue
+```typescript
+
+// 首先获取到Video类别的设置信息
+const videoSettings = obs.NodeObs.OBS_settings_getSettings('Video')
+
+// 查找到Output子类别，并设置currentValue，注意：这里的对象修改不会直接生效
+videoSettings.forEach(subCategory => {
+  subCategory.parameters.forEach(param => {
+    if (param.name === 'Output') {
+      param.currentValue = '1024x768'
+    }
+  })
+})
+
+// 应用配置
+obs.NodeObs.OBS_settings_saveSettings('Video', videoSettings)
+
+```
+
+下面的函数可以方便你快速修改指定的配置信息
+```typescript
+function setSetting(category, parameter, value) {
+  let oldValue;
+
+  // Getting settings container
+  const settings = osn.NodeObs.OBS_settings_getSettings(category).data;
+
+  settings.forEach(subCategory => {
+    subCategory.parameters.forEach(param => {
+      if (param.name === parameter) {
+        oldValue = param.currentValue;
+        param.currentValue = value;
+      }
+    });
+  });
+
+  // Saving updated settings container
+  if (value != oldValue) {
+    osn.NodeObs.OBS_settings_saveSettings(category, settings);
+  }
+}
+```
+
+#### 推流
+- 
 
 #### 创建虚拟摄像头
 

@@ -1,17 +1,10 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import remote from '@electron/remote'
 import * as obs from 'obs-studio-node'
 
 // Custom APIs for renderer
 const api = {}
-
-ipcRenderer.invoke('getAppPath').then(res => {
-  api.appPath = res
-})
-
-ipcRenderer.invoke('primaryDisplay').then(res => {
-  api.primaryDisplay = res
-})
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
@@ -21,6 +14,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
     contextBridge.exposeInMainWorld('obs', obs)
+    contextBridge.exposeInMainWorld('remote', remote)
   } catch (error) {
     console.error(error)
   }
@@ -31,4 +25,6 @@ if (process.contextIsolated) {
   window.api = api
   // @ts-ignore (define in dts)
   window.obs = obs
+// @ts-ignore (define in dts)
+  window.remote = remote
 }
