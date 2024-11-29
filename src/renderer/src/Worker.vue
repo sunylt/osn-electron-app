@@ -10,6 +10,32 @@ const osn = require('obs-studio-node')
 
 const displayId = v4();
 
+const OS = {
+  Windows: 'win32',
+  Mac: 'darwin',
+}
+
+let existingWindow = false;
+let nwr = null;
+
+// NWR is used to handle display rendering via IOSurface on mac
+if (getOS() === OS.Mac) {
+  nwr = require('node-window-rendering');
+}
+
+
+function byOS(handlers) {
+  const handler = handlers[process.platform];
+
+  if (typeof handler === 'function') return handler();
+
+  return handler;
+}
+
+function getOS() {
+  return process.platform
+}
+
 function setSetting(category, parameter, value) {
   let oldValue;
 
@@ -119,39 +145,86 @@ function createSceneAndSource() {
 }
 
 function createDisplay(window) {
-  // const scene = createSceneAndSource();
+  const scene = createSceneAndSource();
 
   // console.log(scene, 'scene')
   const context = osn.VideoFactory.create()
   // console.log(context, context.video, remote.getCurrentWindow().getNativeWindowHandle())
+  context.video = {
+    fpsNum: 30,
+    fpsDen: 1,
+    baseWidth: 1280,
+    baseHeight: 720,
+    outputWidth: 1280,
+    outputHeight: 720,
+    outputFormat: 11,
+  };
 
   console.log(JSON.stringify(context.video))
-  // const res = osn.NodeObs.OBS_content_createSourcePreviewDisplay(
-  //   window.getNativeWindowHandle(),
-  //   scene.name, // or use camera source Id here
-  //   displayId,
-  //   // false,
-  //   // context,
-  // );
-
-
-  osn.NodeObs.OBS_content_createDisplay(
-  window.getNativeWindowHandle(),
-      displayId,
-      0,
-      false,
-      context,
+  osn.NodeObs.OBS_content_createSourcePreviewDisplay(
+    window.getNativeWindowHandle(),
+    scene.name, // or use camera source Id here
+    displayId,
+    false,
+    context,
   );
+
+
+  // osn.NodeObs.OBS_content_createDisplay(
+  //       window.getNativeWindowHandle(),
+  //       v4(),
+  //       0,
+  //       false,
+  //       context,
+  //     );
 
   osn.NodeObs.OBS_content_setShouldDrawUI(displayId, true);
   osn.NodeObs.OBS_content_setPaddingSize(displayId, 100);
-  // Match padding color with main window background color
+  // // Match padding color with main window background color
   osn.NodeObs.OBS_content_setPaddingColor(displayId, 255, 255, 255);
   osn.NodeObs.OBS_content_resizeDisplay(displayId, 1000, 800);
 
 
-  osn.NodeObs.OBS_content_moveDisplay(displayId, 100, 300);
+  // osn.NodeObs.OBS_content_moveDisplay(displayId, 100, 300);
   console.log('display render over here')
+
+
+  // On mac, resizing the display is not enough, we also have to
+    // recreate the window and IOSurface for the new size
+    // if (getOS() === OS.Mac) {
+    //   if (this.existingWindow) {
+    //     nwr.destroyWindow(this.name);
+    //     nwr.destroyIOSurface(this.name);
+    //   }
+
+    //   const surface = this.videoService.createOBSIOSurface(this.name);
+    //   nwr.createWindow(
+    //     this.name,
+    //     remote.BrowserWindow.fromId(this.electronWindowId).getNativeWindowHandle(),
+    //   );
+    //   nwr.connectIOSurface(this.name, surface);
+    //   this.existingWindow = true;
+    // }
+
+  if (getOS() === OS.Mac && nwr) {
+    console.log('nwr>>>', nwr)
+    if (existingWindow) {
+      nwr.destroyWindow(displayId);
+      nwr.destroyIOSurface(displayId);
+    }
+    const surface = osn.NodeObs.OBS_content_createIOSurface(displayId)
+    console.log(surface, 'surface')
+    nwr.createWindow(
+      displayId,
+      window.getNativeWindowHandle(),
+    );
+    // nwr.connectIOSurface(displayId, surface);
+    // nwr.moveWindow(displayId, 100, 300)
+    // existingWindow = true
+  } else {
+    osn.NodeObs.OBS_content_moveDisplay(displayId, 100, 300);
+  }
+  
 }
 
 onMounted(() => {
@@ -161,9 +234,9 @@ onMounted(() => {
   }
   // const { width, height, x, y } = previewContainer.getBoundingClientRect();
   // window.electron.ipcRenderer.send('initPreview', { width, height, x, y })
-  ipcRenderer.on('winId', (_, id) => {
-    initOBS(remote.BrowserWindow.fromId(id));
-  })
+  // ipcRenderer.on('winId', (_, id) => {
+    initOBS(remote.getCurrentWindow());
+  // })
 
 })
 </script>

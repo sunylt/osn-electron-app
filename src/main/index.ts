@@ -13,8 +13,8 @@ function createWindow(): void {
 
 
   const workerWindow = new BrowserWindow({
-    show: false,
-    frame: false,
+    // show: false,
+    // frame: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -46,7 +46,7 @@ function createWindow(): void {
   })
 
   mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+    // mainWindow.show()
     workerWindow.webContents.send('winId', mainWindow.id)
   })
 
